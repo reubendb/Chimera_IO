@@ -1,0 +1,26 @@
+COMP	  = ftn -c
+FFLAGS  =  
+LINK    = ftn
+
+HDF5_LIB = -L${OLCF_HDF5_ROOT}/lib -lhdf5_fortran -lhdf5
+HDF5_INC = -I${OLCF_HDF5_ROOT}/include
+
+EXE = Chimera_IO
+default : $(EXE)
+
+OBJFILES=   KIND_MODULE.o  \
+            NUMERICAL_MODULE.o  \
+            data_module.o \
+            IO_MODULE.o \
+            Chimera_IO.o
+
+%.o: $(VPATH)%.f95
+	$(COMP) $< ${HDF5_LIB} ${HDF5_INC}
+
+Chimera_IO: $(OBJFILES)
+	$(SEGLDR) $(RadHyd_LIB) $(OBJFILES) ${HDF5_LIB}
+
+clean:
+	rm -f *.o *.mod
+clobber: clean
+	rm -f ${EXE}
