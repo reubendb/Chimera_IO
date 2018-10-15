@@ -1,4 +1,4 @@
-COMP	= mpifort -c
+COMP	= mpifort -c -qopt
 FFLAGS  =  
 LINK    = mpifort
 

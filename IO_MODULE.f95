@@ -157,7 +157,7 @@ MODULE io_module
   END SUBROUTINE initialized_io
 
 
-  SUBROUTINE model_write_hdf5()
+  SUBROUTINE model_write_hdf5 ( SerialOption )
     !-----------------------------------------------------------------------
     !
     !    File:         model_write_hdf5
@@ -185,7 +185,8 @@ MODULE io_module
     !  radial_ray_module
     !
     !-----------------------------------------------------------------------
-
+    
+    logical, intent(in), optional    :: SerialOption
 
     !-----------------------------------------------------------------------
     !       File, group, dataset, and dataspace Identifier 
@@ -204,6 +205,9 @@ MODULE io_module
     INTEGER                          :: dset_rank       ! Dataset rank
     INTEGER                          :: error           ! Error Flag
     INTEGER                          :: FILE_INFO_TEMPLATE
+    
+    INTEGER                          :: MyComm, OldGroup, NewGroup
+    LOGICAL                          :: Serial
 
     INTEGER(HSIZE_T), dimension(1)   :: datasize1d
     INTEGER(HSIZE_T), dimension(2)   :: datasize2d
@@ -222,7 +226,11 @@ MODULE io_module
     REAL(KIND=double)                :: io_startime
     REAL(KIND=double)                :: io_endtime
     
-    CALL initialized_io()    
+    Serial = .false.
+    if ( present ( SerialOption ) ) &
+      Serial = SerialOption
+    
+    CALL initialized_io()
     
     !------------------------------------------------------------------------
     !       Create and Initialize File using Default Properties
@@ -232,6 +240,19 @@ MODULE io_module
 
     io_startime = MPI_WTIME()
     
+    if ( .not. Serial ) then
+      call MPI_COMM_DUP ( MPI_COMM_WORLD, MyComm, error )
+    else
+      call MPI_COMM_GROUP(MPI_COMM_WORLD, OldGroup, error)
+      call MPI_GROUP_INCL(OldGroup, 1, [0], NewGroup, error)
+      call MPI_COMM_CREATE(MPI_COMM_WORLD, NewGroup, MyComm, error)
+      call MPI_GROUP_FREE(NewGroup, error)
+      call MPI_GROUP_FREE(OldGroup, error)
+      if ( myid /= 0 ) then
+        return
+      end if
+    end if
+    
     CALL h5open_f(error)
     CALL h5pcreate_f(H5P_FILE_ACCESS_F, plist_id, error)
     CALL h5pset_sieve_buf_size_f(plist_id, sieve_buffer, error)
@@ -240,7 +261,7 @@ MODULE io_module
     CALL MPI_Info_set(FILE_INFO_TEMPLATE, "romio_cb_write", "ENABLE", error)
     CALL MPI_Info_set(FILE_INFO_TEMPLATE, "romio_cb_read", "ENABLE", error) 
     CALL MPI_Info_set(FILE_INFO_TEMPLATE, "cb_buffer_size", "33554432", error)
-    CALL h5pset_fapl_mpio_f(plist_id, MPI_COMM_WORLD, MPI_INFO_NULL, error)
+    CALL h5pset_fapl_mpio_f(plist_id, MyComm, MPI_INFO_NULL, error)
 
     CALL h5fcreate_f(filename//suffix, &
            H5F_ACC_TRUNC_F, file_id, error, access_prp=plist_id)
@@ -592,6 +613,8 @@ MODULE io_module
       WRITE(*, fmt = '(a30,i9,a10,i5,a20,f10.5)')'*** HDF5 Model dump at cycle ', ncycle, &
         'IO Count:', io_count, 'IO elapsed time: ', io_walltime 
     ENDIF
+    
+    call MPI_COMM_FREE(MyComm, error)
     
     RETURN
 

@@ -18,7 +18,7 @@ program Chimera_IO_Bench
     k_ray_max, &
     iCycle
   integer, parameter :: &
-    nx = 3000, &
+    nx = 512, &
     !nx = 300, &
     !ny = 16, &
     !nz = 8, &
@@ -28,6 +28,10 @@ program Chimera_IO_Bench
     endCycle = 10
   integer :: &
     ny, nz
+  logical :: &
+    Serial = .false.
+  character ( 64 ) :: &
+    Argument
   
   !nproc_y = 16
   !nproc_z = 8
@@ -40,11 +44,15 @@ program Chimera_IO_Bench
   call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, mpiError)
   call MPI_COMM_RANK(MPI_COMM_WORLD, myid, mpiError)
   
+  call get_command_argument ( 1, Argument )
+  if ( trim ( Argument ) == 'serial' ) &
+    Serial = .true.
+    
   !-- Weak scale the problem size with nprocs
   nproc_y = floor ( sqrt ( nproc * 1.0 ) )
   nproc_z = nproc_y
-  ny = nproc_y * 4
-  nz = nproc_z * 4
+  ny = nproc_y * 2
+  nz = nproc_z * 2
   
   if(nproc_y * nproc_z /= nproc)then
     if ( myid == 0 ) then
@@ -54,9 +62,17 @@ program Chimera_IO_Bench
     call MPI_ABORT(MPI_COMM_WORLD, 1, mpiError)
   end if
   
+  if (Serial) then
+    if (myid == 0) then
+      print*, 'Simulating serial write ...'
+      nproc_y = 1
+      nproc_z = 1
+    end if
+  end if
+  
   my_j_ray_dim = ny/nproc_y
   my_k_ray_dim = nz/nproc_z
-      
+  
   j_ray_min = MOD(myid, nproc_y) * my_j_ray_dim + 1
   k_ray_min = (myid/nproc_y) * my_k_ray_dim + 1
   j_ray_max = MOD(myid, nproc_y) * my_j_ray_dim + my_j_ray_dim
@@ -193,15 +209,14 @@ program Chimera_IO_Bench
   call random_number(dnurad)
   call random_number(psi0_c)
   
+
   do iCycle = 1, endCycle
-    call model_write_hdf5()
-    !if(myid == 0 .and. mod(ncycle, 10) == 0)then
-    !  print*, 'Performance:', ncycle*1.0/io_walltime, ' file/sec'
-    !end if
+    call model_write_hdf5 ( SerialOption = Serial )
     ncycle = ncycle+1
     time = time + 0.5
   end do
-  
+    
+    
   if ( myid == 0 ) then
     print*, 'Total walltime (s)    :', io_walltime
     print*, 'Walltime per file (s) :', io_walltime/ncycle
