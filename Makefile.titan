@@ -1,4 +1,4 @@
-COMP	  = ftn -c
+COMP	= ftn -c
 FFLAGS  =  
 LINK    = ftn
 
@@ -8,17 +8,17 @@ HDF5_INC = -I${OLCF_HDF5_ROOT}/include
 EXE = Chimera_IO
 default : $(EXE)
 
-OBJFILES=   KIND_MODULE.o  \
-            NUMERICAL_MODULE.o  \
-            data_module.o \
-            IO_MODULE.o \
-            Chimera_IO.o
+OBJFILES = KIND_MODULE.o  \
+           NUMERICAL_MODULE.o  \
+           data_module.o \
+           IO_MODULE.o \
+           Chimera_IO.o
 
 %.o: $(VPATH)%.f95
-	$(COMP) $< ${HDF5_LIB} ${HDF5_INC}
+	${COMP} $< ${HDF5_LIB} ${HDF5_INC}
 
 Chimera_IO: $(OBJFILES)
-	$(SEGLDR) $(RadHyd_LIB) $(OBJFILES) ${HDF5_LIB}
+	${LINK} $(OBJFILES) ${HDF5_LIB} -o ${EXE}_Titan
 
 clean:
 	rm -f *.o *.mod

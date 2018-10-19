@@ -258,8 +258,10 @@ MODULE io_module
     CALL h5pset_sieve_buf_size_f(plist_id, sieve_buffer, error)
     CALL h5pset_alignment_f(plist_id, thresshold, alignment, error);
     CALL MPI_Info_create(FILE_INFO_TEMPLATE, error)
+    call MPI_Info_set(FILE_INFO_TEMPLATE, "cb_nodes", "2", error)
     CALL MPI_Info_set(FILE_INFO_TEMPLATE, "romio_cb_write", "ENABLE", error)
-    CALL MPI_Info_set(FILE_INFO_TEMPLATE, "romio_cb_read", "ENABLE", error) 
+    CALL MPI_Info_set(FILE_INFO_TEMPLATE, "romio_cb_read", "ENABLE", error)
+    call MPI_Info_set(FILE_INFO_TEMPLATE, "romio_ds_write", "DISABLE", error);
     CALL MPI_Info_set(FILE_INFO_TEMPLATE, "cb_buffer_size", "33554432", error)
     CALL h5pset_fapl_mpio_f(plist_id, MyComm, MPI_INFO_NULL, error)
 

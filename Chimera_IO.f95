@@ -18,7 +18,7 @@ program Chimera_IO_Bench
     k_ray_max, &
     iCycle
   integer, parameter :: &
-    nx = 512, &
+    nx = 2048, &
     !nx = 300, &
     !ny = 16, &
     !nz = 8, &
@@ -51,8 +51,8 @@ program Chimera_IO_Bench
   !-- Weak scale the problem size with nprocs
   nproc_y = floor ( sqrt ( nproc * 1.0 ) )
   nproc_z = nproc_y
-  ny = nproc_y * 2
-  nz = nproc_z * 2
+  ny = nproc_y * 4
+  nz = nproc_z * 4
   
   if(nproc_y * nproc_z /= nproc)then
     if ( myid == 0 ) then
@@ -67,6 +67,9 @@ program Chimera_IO_Bench
       print*, 'Simulating serial write ...'
       nproc_y = 1
       nproc_z = 1
+    else
+      nproc_y = ny
+      nproc_z = nz
     end if
   end if
   
