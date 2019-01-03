@@ -258,11 +258,11 @@ MODULE io_module
     CALL h5pset_sieve_buf_size_f(plist_id, sieve_buffer, error)
     CALL h5pset_alignment_f(plist_id, thresshold, alignment, error);
     CALL MPI_Info_create(FILE_INFO_TEMPLATE, error)
-    call MPI_Info_set(FILE_INFO_TEMPLATE, "cb_nodes", "2", error)
     CALL MPI_Info_set(FILE_INFO_TEMPLATE, "romio_cb_write", "ENABLE", error)
     CALL MPI_Info_set(FILE_INFO_TEMPLATE, "romio_cb_read", "ENABLE", error)
     call MPI_Info_set(FILE_INFO_TEMPLATE, "romio_ds_write", "DISABLE", error);
     CALL MPI_Info_set(FILE_INFO_TEMPLATE, "cb_buffer_size", "33554432", error)
+    CALL MPI_Info_set(FILE_INFO_TEMPLATE, "cb_block_size", "33554432", error)
     CALL h5pset_fapl_mpio_f(plist_id, MyComm, MPI_INFO_NULL, error)
 
     CALL h5fcreate_f(filename//suffix, &
@@ -764,7 +764,8 @@ MODULE io_module
     CALL h5sselect_hyperslab_f(filespace, H5S_SELECT_SET_F, slab_offset, &
            local_datasize, error)
     CALL h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error) 
-    CALL h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+    !CALL h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+    CALL h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     CALL h5dwrite_f(dataset_id, H5T_NATIVE_DOUBLE, value, local_datasize, &
            error, file_space_id=filespace, mem_space_id=memspace, &
            xfer_prp=plist_id)
@@ -834,7 +835,8 @@ MODULE io_module
     CALL h5sselect_hyperslab_f(filespace, H5S_SELECT_SET_F, slab_offset, &
            local_datasize, error)
     CALL h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error) 
-    CALL h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+    !CALL h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+    CALL h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     CALL h5dwrite_f(dataset_id, H5T_NATIVE_DOUBLE, value, local_datasize, &
            error, file_space_id=filespace, mem_space_id=memspace, &
            xfer_prp=plist_id)
@@ -904,7 +906,8 @@ MODULE io_module
     CALL h5sselect_hyperslab_f(filespace, H5S_SELECT_SET_F, slab_offset, &
            local_datasize, error)
     CALL h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error) 
-    CALL h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+    !CALL h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+    CALL h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     CALL h5dwrite_f(dataset_id, H5T_NATIVE_DOUBLE, value, local_datasize, &
            error, file_space_id=filespace, mem_space_id=memspace, &
            xfer_prp=plist_id)
@@ -974,7 +977,8 @@ MODULE io_module
     CALL h5sselect_hyperslab_f(filespace, H5S_SELECT_SET_F, slab_offset, &
            local_datasize, error)
     CALL h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error) 
-    CALL h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+    !CALL h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+    CALL h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     CALL h5dwrite_f(dataset_id, H5T_NATIVE_DOUBLE, value, local_datasize, &
            error, file_space_id=filespace, mem_space_id=memspace, &
            xfer_prp=plist_id)
@@ -1044,7 +1048,8 @@ MODULE io_module
     CALL h5sselect_hyperslab_f(filespace, H5S_SELECT_SET_F, slab_offset, &
            local_datasize, error)
     CALL h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error) 
-    CALL h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+    !CALL h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_INDEPENDENT_F, error)
+    CALL h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
     CALL h5dwrite_f(dataset_id, H5T_NATIVE_INTEGER, value, local_datasize, &
            error, file_space_id=filespace, mem_space_id=memspace, &
            xfer_prp=plist_id)
