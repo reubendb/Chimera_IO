@@ -28,7 +28,8 @@ MODULE io_module
   CHARACTER(LEN=16), PARAMETER, PRIVATE :: filename = 'RadHyd3D_output_'
   
   
-  LOGICAL, PRIVATE                    :: io_initialized = .FALSE.
+  LOGICAL, PUBLIC                     :: io_initialized = .FALSE.
+  
   INTEGER, PRIVATE                    :: nx              ! x-array extent
   INTEGER, PRIVATE                    :: ny              ! y-array extent globaly
   INTEGER, PRIVATE                    :: nz              ! z-array extent globaly
@@ -69,6 +70,7 @@ MODULE io_module
   REAL(KIND=double), PUBLIC           :: io_walltime
   
   PUBLIC      :: model_write_hdf5
+  PUBLIC      :: model_read_hdf5
   
   PRIVATE     :: write_ray_hyperslab
   PRIVATE     :: write_ray_hyperslab_dbl_2d
@@ -623,6 +625,257 @@ MODULE io_module
   END SUBROUTINE model_write_hdf5
   
   
+  SUBROUTINE model_read_hdf5
+  
+    
+    CHARACTER(LEN=12)                :: suffix
+    INTEGER(HID_T)                   :: file_id         ! HDF5 File identifier  
+    INTEGER(HID_T)                   :: group_id        ! HDF5 Group identifier
+    INTEGER(HID_T)                   :: dataset_id      ! HDF5 dataset identifier
+    INTEGER(HID_T)                   :: dataspace_id    ! HDF5 dataspace identifier
+    
+    INTEGER                          :: error           ! Error Flag
+    
+    INTEGER                          :: MyComm, OldGroup, NewGroup
+    LOGICAL                          :: Serial
+    
+    INTEGER(HSIZE_T), dimension(1)   :: datasize1d
+    INTEGER(HSIZE_T), dimension(2)   :: datasize2d
+    INTEGER(HSIZE_T), dimension(2)   :: mydatasize2d
+    INTEGER(HSIZE_T), dimension(2)   :: slab_offset2d
+    INTEGER(HSIZE_T), dimension(3)   :: datasize3d
+    INTEGER(HSIZE_T), dimension(3)   :: mydatasize3d
+    INTEGER(HSIZE_T), dimension(3)   :: slab_offset3d
+    INTEGER(HSIZE_T), dimension(4)   :: datasize4d
+    INTEGER(HSIZE_T), dimension(4)   :: mydatasize4d
+    INTEGER(HSIZE_T), dimension(4)   :: slab_offset4d
+    INTEGER(HSIZE_T), dimension(5)   :: datasize5d
+    INTEGER(HSIZE_T), dimension(5)   :: mydatasize5d
+    INTEGER(HSIZE_T), dimension(5)   :: slab_offset5d
+    
+    REAL(KIND=double)                :: io_startime
+    REAL(KIND=double)                :: io_endtime
+    
+    
+    Serial = .false.
+    
+    CALL initialized_io()
+  
+    if ( .not. Serial ) then
+      call MPI_COMM_DUP ( MPI_COMM_WORLD, MyComm, error )
+    else
+      print*, 'SERIAL MODE NOT SUPPORTED'
+      stop
+    end if
+    
+    WRITE(suffix, fmt='(i9.9,a3)') ncycle,'.h5'
+    io_startime = MPI_WTIME()
+    
+    CALL h5open_f(error)
+    CALL h5fopen_f(filename//suffix, H5F_ACC_RDONLY_F, file_id, error)
+    
+    CALL h5gopen_f(file_id, '/physical_variables', group_id, error)
+    
+    mydatasize3d = (/nx, my_j_ray_dim, my_k_ray_dim/)
+    slab_offset3d = (/0,j_ray_min-1,k_ray_min-1/)
+    CALL read_ray_hyperslab('rho_c', rho_c, group_id, &
+           mydatasize3d, slab_offset3d)
+    CALL read_ray_hyperslab('t_c', t_c, group_id, &
+           mydatasize3d, slab_offset3d)
+    CALL read_ray_hyperslab('ye_c', ye_c, group_id, &
+           mydatasize3d, slab_offset3d)
+           
+    !-----------------------------------------------------------------------
+    !  Independent mechanical variables
+    !-----------------------------------------------------------------------
+    CALL read_ray_hyperslab('u_c', u_c, group_id, &
+           mydatasize3d, slab_offset3d)
+    CALL read_ray_hyperslab('v_c', v_c, group_id, &
+           mydatasize3d, slab_offset3d)
+    CALL read_ray_hyperslab('w_c', u_c, group_id, &
+           mydatasize3d, slab_offset3d)
+    
+    !-----------------------------------------------------------------------
+    !  Independent radiation variables and bookkeeping arrays
+    !-----------------------------------------------------------------------
+    datasize5d = (/nx,nez,nnu,ny,nz/)
+    mydatasize5d = (/nx, nez, nnu, my_j_ray_dim, my_k_ray_dim/)
+    slab_offset5d = (/0,0,0,j_ray_min-1,k_ray_min-1/)
+    CALL read_ray_hyperslab('psi0_c', psi0_c, group_id, &
+           mydatasize5d, slab_offset5d)
+    CALL read_ray_hyperslab('dnurad', dnurad, group_id, &
+           mydatasize5d, slab_offset5d)
+           
+    datasize4d = (/nez,nnu,ny,nz/)
+    mydatasize4d = (/nez, nnu, my_j_ray_dim, my_k_ray_dim/)
+    slab_offset4d = (/0,0,j_ray_min-1,k_ray_min-1/)
+    CALL read_ray_hyperslab('unukrad', unukrad, group_id, &
+           mydatasize4d, slab_offset4d)
+    
+    datasize4d = (/nx,nnu,ny,nz/)
+    mydatasize4d = (/nx, nnu, my_j_ray_dim, my_k_ray_dim/)
+    slab_offset4d = (/0,0,j_ray_min-1,k_ray_min-1/)
+    CALL read_ray_hyperslab('unujrad', unujrad, group_id, &
+           mydatasize4d, slab_offset4d)
+           
+    
+    datasize2d = (/ny,nz/)
+    mydatasize2d = (/my_j_ray_dim, my_k_ray_dim/)
+    slab_offset2d = (/j_ray_min-1,k_ray_min-1/)
+    CALL read_ray_hyperslab('e_rad', e_rad, group_id, &
+           mydatasize2d, slab_offset2d)
+           
+    CALL read_ray_hyperslab('elec_rad', elec_rad, group_id, &
+           mydatasize2d, slab_offset2d)
+    
+    datasize3d = (/nnu,ny,nz/)
+    mydatasize3d = (/nnu, my_j_ray_dim, my_k_ray_dim/)
+    slab_offset3d = (/0,j_ray_min-1,k_ray_min-1/)
+    CALL read_ray_hyperslab('unurad', unurad, group_id, &
+           mydatasize3d, slab_offset3d)
+    
+    datasize4d = (/nez,nnu,ny,nz/)
+    mydatasize4d = (/nez, nnu, my_j_ray_dim, my_k_ray_dim/)
+    slab_offset4d = (/0,0,j_ray_min-1,k_ray_min-1/)
+    CALL read_ray_hyperslab('nnukrad', nnukrad, group_id, &
+           mydatasize4d, slab_offset4d)
+    
+    datasize4d = (/nx,nnu,ny,nz/)
+    mydatasize4d = (/nx, nnu, my_j_ray_dim, my_k_ray_dim/)
+    slab_offset4d = (/0,0,j_ray_min-1,k_ray_min-1/)
+    CALL read_ray_hyperslab('nnujrad', nnujrad, group_id, &
+           mydatasize4d, slab_offset4d)
+    
+    datasize3d = (/nnu,ny,nz/)
+    mydatasize3d = (/nnu, my_j_ray_dim, my_k_ray_dim/)
+    slab_offset3d = (/0,j_ray_min-1,k_ray_min-1/)
+    CALL read_ray_hyperslab('nnurad', nnurad, group_id, &
+           mydatasize3d, slab_offset3d)
+           
+    datasize4d = (/nez,nnu,ny,nz/)
+    mydatasize4d = (/nez, nnu, my_j_ray_dim, my_k_ray_dim/)
+    slab_offset4d = (/0,0,j_ray_min-1,k_ray_min-1/)
+    CALL read_ray_hyperslab('nu_r', nu_r, group_id, &
+           mydatasize4d, slab_offset4d)
+    CALL read_ray_hyperslab('nu_rt', nu_rt, group_id, &
+           mydatasize4d, slab_offset4d)
+    CALL read_ray_hyperslab('nu_rho', nu_rho, group_id, &
+           mydatasize4d, slab_offset4d)
+    CALL read_ray_hyperslab('nu_rhot', nu_rhot, group_id, &
+           mydatasize4d, slab_offset4d)
+    
+    CALL read_ray_hyperslab('psi0dat', psi0dat, group_id, &
+           mydatasize4d, slab_offset4d)
+    CALL read_ray_hyperslab('psi1dat', psi1dat, group_id, &
+           mydatasize4d, slab_offset4d)
+    
+    datasize4d = (/nx,nnc,ny,nz/)
+    mydatasize4d = (/nx, nnc, my_j_ray_dim, my_k_ray_dim/)
+    slab_offset4d = (/0,0,j_ray_min-1,k_ray_min-1/)
+    CALL read_ray_hyperslab('xn_c', xn_c, group_id, &
+           mydatasize4d, slab_offset4d)
+    
+    datasize3d = (/nx,ny,nz/)
+    mydatasize3d = (/nx, my_j_ray_dim, my_k_ray_dim/)
+    slab_offset3d = (/0,j_ray_min-1,k_ray_min-1/)
+    CALL read_ray_hyperslab('nse_c', nse_c, group_id, &
+           mydatasize3d, slab_offset3d)
+    CALL read_ray_hyperslab('a_nuc_rep_c', a_nuc_rep_c, group_id, &
+            mydatasize3d, slab_offset3d)
+    CALL read_ray_hyperslab('z_nuc_rep_c', z_nuc_rep_c, &
+           group_id, mydatasize3d, slab_offset3d)
+    CALL read_ray_hyperslab('be_nuc_rep_c', be_nuc_rep_c, &
+           group_id, mydatasize3d, slab_offset3d)
+    CALL read_ray_hyperslab('uburn_c', uburn_c, &
+           group_id, mydatasize3d, slab_offset3d)
+    CALL read_ray_hyperslab('duesrc', duesrc, &
+           group_id, mydatasize3d, slab_offset3d)
+    
+    datasize1d(1) = nx
+    CALL read_1d_slab('e_nu_c_bar', e_nu_c_bar, group_id, &
+           datasize1d)
+    CALL read_1d_slab('f_nu_e_bar', f_nu_e_bar, group_id, &
+           datasize1d)
+    
+    datasize3d = (/nx,ny,nz/)
+    mydatasize3d = (/nx, my_j_ray_dim, my_k_ray_dim/)
+    slab_offset3d = (/0,j_ray_min-1,k_ray_min-1/)
+    CALL read_ray_hyperslab('pMD', pMD, group_id, &
+           mydatasize3d, slab_offset3d)
+    CALL read_ray_hyperslab('sMD', sMD, group_id, &
+           mydatasize3d, slab_offset3d)
+    CALL read_ray_hyperslab('dudt_nuc', dudt_nuc, group_id, &
+           mydatasize3d, slab_offset3d)
+    CALL read_ray_hyperslab('dudt_nu', dudt_nu, group_id, &
+           mydatasize3d, slab_offset3d)
+    CALL read_ray_hyperslab('grav_x_c', grav_x_c, group_id, &
+           mydatasize3d, slab_offset3d)
+    CALL read_ray_hyperslab('grav_y_c', grav_y_c, group_id, &
+           mydatasize3d, slab_offset3d)
+    CALL read_ray_hyperslab('grav_z_c', grav_z_c, group_id, &
+           mydatasize3d, slab_offset3d)
+    
+    datasize2d = (/ny,nz/)
+    mydatasize2d = (/my_j_ray_dim, my_k_ray_dim/)
+    slab_offset2d = (/j_ray_min-1,k_ray_min-1/)
+    CALL read_ray_hyperslab('r_shock', r_shock, group_id, &
+           mydatasize2d, slab_offset2d)
+    CALL read_ray_hyperslab('r_shock_mn', r_shock_mn, group_id, &
+           mydatasize2d, slab_offset2d)
+    CALL read_ray_hyperslab('r_shock_mx', r_shock_mx, group_id, &
+           mydatasize2d, slab_offset2d)
+    CALL read_ray_hyperslab('tau_adv', tau_adv, group_id, &
+           mydatasize2d, slab_offset2d)
+    CALL read_ray_hyperslab('tau_heat_nu', tau_heat_nu, group_id, &
+           mydatasize2d, slab_offset2d)
+    CALL read_ray_hyperslab('tau_heat_nuc', tau_heat_nuc, group_id, &
+           mydatasize2d, slab_offset2d)
+    CALL read_ray_hyperslab('r_nse', r_nse, group_id, &
+           mydatasize2d, slab_offset2d)
+    
+    datasize3d = (/nnu,ny,nz/)
+    mydatasize3d = (/nnu, my_j_ray_dim, my_k_ray_dim/)
+    slab_offset3d = (/0,j_ray_min-1,k_ray_min-1/)
+    CALL read_ray_hyperslab('rsphere_mean', rsphere_mean, group_id, &
+           mydatasize3d, slab_offset3d)
+    CALL read_ray_hyperslab('dsphere_mean', dsphere_mean, group_id, &
+           mydatasize3d, slab_offset3d)
+    CALL read_ray_hyperslab('tsphere_mean', tsphere_mean, group_id, &
+           mydatasize3d, slab_offset3d)
+    CALL read_ray_hyperslab('msphere_mean', msphere_mean, group_id, &
+           mydatasize3d, slab_offset3d)
+    CALL read_ray_hyperslab('esphere_mean', esphere_mean, group_id, &
+           mydatasize3d, slab_offset3d)
+    
+    datasize3d = (/nnu+1,ny,nz/)
+    mydatasize3d = (/nnu+1, my_j_ray_dim, my_k_ray_dim/)
+    slab_offset3d = (/0,j_ray_min-1,k_ray_min-1/)
+    CALL read_ray_hyperslab('r_gain', r_gain, group_id, &
+           mydatasize3d, slab_offset3d)
+    
+    CALL h5gclose_f(group_id, error)
+    
+    !------------------------------------------------------------------------
+    !      Cleanup
+    !------------------------------------------------------------------------
+
+    CALL h5fclose_f(file_id, error)
+    CALL h5close_f(error)
+    
+    io_endtime = MPI_WTIME()
+    io_walltime = io_walltime + (io_endtime-io_startime)
+    io_count = io_count+1
+    
+    IF(myid == 0)THEN
+      WRITE(*, fmt = '(a30,i9,a10,i5,a20,f10.5)')'*** HDF5 Model read at cycle ', ncycle, &
+        'IO Count:', io_count, 'IO elapsed time: ', io_walltime 
+    ENDIF
+    
+    call MPI_COMM_FREE(MyComm, error)
+    
+    RETURN
+  
+  END SUBROUTINE model_read_hdf5
   
 
   SUBROUTINE write_1d_slab_int(name, value, group_id, datasize, &
@@ -1236,7 +1489,7 @@ MODULE io_module
     CALL h5dget_space_f(dataset_id, filespace, error)
     CALL h5sselect_hyperslab_f(filespace, H5S_SELECT_SET_F, slab_offset, &
            datasize, error)
-    CALL h5screate_simple_f(4, datasize, memspace, error)
+    CALL h5screate_simple_f(5, datasize, memspace, error)
     CALL h5sselect_hyperslab_f(memspace, H5S_SELECT_SET_F, null_offset, &
            datasize, error)
     CALL h5dread_f(dataset_id, H5T_NATIVE_DOUBLE, value, datasize, &

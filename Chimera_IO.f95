@@ -1,7 +1,7 @@
 program Chimera_IO_Bench
 
   use io_module, only: &
-    model_write_hdf5, io_walltime
+    model_write_hdf5, model_read_hdf5, io_walltime, io_initialized
   use data_module
   use mpi
   
@@ -52,10 +52,10 @@ program Chimera_IO_Bench
   !-- Weak scale the problem size with nprocs
   nproc_y = floor ( sqrt ( nproc * 1.0 ) )
   nproc_z = nproc_y
-  ny = nproc_y * 16
-  nz = nproc_z * 32
-  !ny = nproc_y * 4
-  !nz = nproc_z * 4
+  !ny = nproc_y * 16
+  !nz = nproc_z * 32
+  ny = nproc_y * 4
+  nz = nproc_z * 4
   
   if ( myid == 0 ) &
     print*, 'Starting Chimera_IO, nProc: ', nproc
@@ -220,6 +220,8 @@ program Chimera_IO_Bench
   call random_number(psi0_c)
   
 
+  io_initialized = .false.
+   
   do iCycle = 1, endCycle
     if ( myid == 0 ) print*, 'Writing HDF5'
     call model_write_hdf5 ( SerialOption = Serial )
@@ -227,11 +229,26 @@ program Chimera_IO_Bench
     time = time + 0.5
   end do
     
+  if ( myid == 0 ) then
+    print*, 'Total walltime (s)    :', io_walltime
+    print*, 'Walltime per file (s) :', io_walltime/(ncycle-1)
+  end if
+  
+  
+  io_initialized = .false.
+  ncycle = 1
+  
+  do iCycle = 1, endCycle
+    if ( myid == 0 ) print*, 'Reading HDF5'
+    call model_read_hdf5 ( )
+    ncycle = ncycle+1
+  end do
     
   if ( myid == 0 ) then
     print*, 'Total walltime (s)    :', io_walltime
-    print*, 'Walltime per file (s) :', io_walltime/ncycle
+    print*, 'Walltime per file (s) :', io_walltime/(ncycle-1)
   end if
+  
   
   call MPI_FINALIZE(mpiError)
 
