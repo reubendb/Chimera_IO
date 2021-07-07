@@ -909,8 +909,7 @@ MODULE io_module
       CALL h5tset_size_f(atype_id, attr_len, error)
       CALL h5acreate_f(dataset_id, 'Desc', atype_id, dataspace_id, &
              attr_id, error)
-      IF(myid == 0) &
-        CALL h5awrite_f(attr_id, atype_id, desc_option, adims, error)
+      CALL h5awrite_f(attr_id, atype_id, desc_option, adims, error)
       CALL h5aclose_f(attr_id, error)
       CALL h5sclose_f(dataspace_id, error)
     END IF
@@ -921,8 +920,7 @@ MODULE io_module
       CALL h5tset_size_f(atype_id, attr_len, error)
       CALL h5acreate_f(dataset_id, 'Unit', atype_id, dataspace_id, &
              attr_id, error)
-      IF(myid == 0) &
-        CALL h5awrite_f(attr_id, atype_id, unit_option, adims, error)
+      CALL h5awrite_f(attr_id, atype_id, unit_option, adims, error)
       CALL h5aclose_f(attr_id, error)
       CALL h5sclose_f(dataspace_id, error)
     END IF
@@ -961,8 +959,7 @@ MODULE io_module
       CALL h5tset_size_f(atype_id, attr_len, error)
       CALL h5acreate_f(dataset_id, 'Desc', atype_id, dataspace_id, &
              attr_id, error)
-      IF(myid == 0) &
-        CALL h5awrite_f(attr_id, atype_id, desc_option, adims, error)
+      CALL h5awrite_f(attr_id, atype_id, desc_option, adims, error)
       CALL h5aclose_f(attr_id, error)
       CALL h5sclose_f(dataspace_id, error)
     END IF
@@ -973,8 +970,7 @@ MODULE io_module
       CALL h5tset_size_f(atype_id, attr_len, error)
       CALL h5acreate_f(dataset_id, 'Unit', atype_id, dataspace_id, &
              attr_id, error)
-      IF(myid == 0) &
-        CALL h5awrite_f(attr_id, atype_id, unit_option, adims, error)
+      CALL h5awrite_f(attr_id, atype_id, unit_option, adims, error)
       CALL h5aclose_f(attr_id, error)
       CALL h5sclose_f(dataspace_id, error)
     END IF
@@ -1031,8 +1027,7 @@ MODULE io_module
       CALL h5tset_size_f(atype_id, attr_len, error)
       CALL h5acreate_f(dataset_id, 'Desc', atype_id, dataspace_id, &
              attr_id, error)
-      IF(myid == 0) &
-        CALL h5awrite_f(attr_id, atype_id, desc_option, adims, error)
+      CALL h5awrite_f(attr_id, atype_id, desc_option, adims, error)
       CALL h5aclose_f(attr_id, error)
       CALL h5sclose_f(dataspace_id, error)
     END IF
@@ -1043,8 +1038,7 @@ MODULE io_module
       CALL h5tset_size_f(atype_id, attr_len, error)
       CALL h5acreate_f(dataset_id, 'Unit', atype_id, dataspace_id, &
              attr_id, error)
-      IF(myid == 0) &
-        CALL h5awrite_f(attr_id, atype_id, unit_option, adims, error)
+      CALL h5awrite_f(attr_id, atype_id, unit_option, adims, error)
       CALL h5aclose_f(attr_id, error)
       CALL h5sclose_f(dataspace_id, error)
     END IF
@@ -1102,8 +1096,7 @@ MODULE io_module
       CALL h5tset_size_f(atype_id, attr_len, error)
       CALL h5acreate_f(dataset_id, 'Desc', atype_id, dataspace_id, &
              attr_id, error)
-      IF(myid == 0) &
-        CALL h5awrite_f(attr_id, atype_id, desc_option, adims, error)
+      CALL h5awrite_f(attr_id, atype_id, desc_option, adims, error)
       CALL h5aclose_f(attr_id, error)
       CALL h5sclose_f(dataspace_id, error)
     END IF
@@ -1114,8 +1107,7 @@ MODULE io_module
       CALL h5tset_size_f(atype_id, attr_len, error)
       CALL h5acreate_f(dataset_id, 'Unit', atype_id, dataspace_id, &
              attr_id, error)
-      IF(myid == 0) &
-        CALL h5awrite_f(attr_id, atype_id, unit_option, adims, error)
+      CALL h5awrite_f(attr_id, atype_id, unit_option, adims, error)
       CALL h5aclose_f(attr_id, error)
       CALL h5sclose_f(dataspace_id, error)
     END IF
@@ -1173,8 +1165,7 @@ MODULE io_module
       CALL h5tset_size_f(atype_id, attr_len, error)
       CALL h5acreate_f(dataset_id, 'Desc', atype_id, dataspace_id, &
              attr_id, error)
-      IF(myid == 0) &
-        CALL h5awrite_f(attr_id, atype_id, desc_option, adims, error)
+      CALL h5awrite_f(attr_id, atype_id, desc_option, adims, error)
       CALL h5aclose_f(attr_id, error)
       CALL h5sclose_f(dataspace_id, error)
     END IF
@@ -1185,8 +1176,7 @@ MODULE io_module
       CALL h5tset_size_f(atype_id, attr_len, error)
       CALL h5acreate_f(dataset_id, 'Unit', atype_id, dataspace_id, &
              attr_id, error)
-      IF(myid == 0) &
-        CALL h5awrite_f(attr_id, atype_id, unit_option, adims, error)
+      CALL h5awrite_f(attr_id, atype_id, unit_option, adims, error)
       CALL h5aclose_f(attr_id, error)
       CALL h5sclose_f(dataspace_id, error)
     END IF
@@ -1244,8 +1234,7 @@ MODULE io_module
       CALL h5tset_size_f(atype_id, attr_len, error)
       CALL h5acreate_f(dataset_id, 'Desc', atype_id, dataspace_id, &
              attr_id, error)
-      IF(myid == 0) &
-        CALL h5awrite_f(attr_id, atype_id, desc_option, adims, error)
+      CALL h5awrite_f(attr_id, atype_id, desc_option, adims, error)
       CALL h5aclose_f(attr_id, error)
       CALL h5sclose_f(dataspace_id, error)
     END IF
@@ -1256,8 +1245,7 @@ MODULE io_module
       CALL h5tset_size_f(atype_id, attr_len, error)
       CALL h5acreate_f(dataset_id, 'Unit', atype_id, dataspace_id, &
              attr_id, error)
-      IF(myid == 0) &
-        CALL h5awrite_f(attr_id, atype_id, unit_option, adims, error)
+      CALL h5awrite_f(attr_id, atype_id, unit_option, adims, error)
       CALL h5aclose_f(attr_id, error)
       CALL h5sclose_f(dataspace_id, error)
     END IF
@@ -1315,8 +1303,7 @@ MODULE io_module
       CALL h5tset_size_f(atype_id, attr_len, error)
       CALL h5acreate_f(dataset_id, 'Desc', atype_id, dataspace_id, &
              attr_id, error)
-      IF(myid == 0) &
-        CALL h5awrite_f(attr_id, atype_id, desc_option, adims, error)
+      CALL h5awrite_f(attr_id, atype_id, desc_option, adims, error)
       CALL h5aclose_f(attr_id, error)
       CALL h5sclose_f(dataspace_id, error)
     END IF
@@ -1327,8 +1314,7 @@ MODULE io_module
       CALL h5tset_size_f(atype_id, attr_len, error)
       CALL h5acreate_f(dataset_id, 'Unit', atype_id, dataspace_id, &
              attr_id, error)
-      IF(myid == 0) &
-        CALL h5awrite_f(attr_id, atype_id, unit_option, adims, error)
+      CALL h5awrite_f(attr_id, atype_id, unit_option, adims, error)
       CALL h5aclose_f(attr_id, error)
       CALL h5sclose_f(dataspace_id, error)
     END IF
